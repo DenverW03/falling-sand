@@ -1,5 +1,6 @@
-use std::usize;
+use std::{time::Duration, usize};
 use minifb::{WindowOptions, Window, Key};
+use std::thread::sleep;
 
 const WINDOW_WIDTH: usize = 800;
 const WINDOW_HEIGHT: usize = 600;
@@ -10,16 +11,24 @@ struct SandParticle {
     ycoord: u32,
 }
 
+struct Particles {
+    particles: Vec<SandParticle>,
+}
+
 impl SandParticle {
     // Function to handle the particle falling
     fn fall(&mut self) {
-        self.ycoord += 1;
+        if self.ycoord <= WINDOW_HEIGHT as u32 - 2 {
+            self.ycoord += 1;
+        }
     }
 }
 
 fn main() {
     // Creating the image buffer (flattened matrix so index Y first on editing)
     let mut buffer: Vec<u32> = vec![0; WINDOW_WIDTH * WINDOW_HEIGHT];
+
+    let mut part_vec = Particles{ particles: Vec::new() };
 
     // Initialising the window
     let mut window = match Window::new("Falling Sand", WINDOW_WIDTH, WINDOW_HEIGHT, WindowOptions::default()) {
@@ -36,15 +45,45 @@ fn main() {
         // Check if the mouse is down
         if window.get_mouse_down(minifb::MouseButton::Left) {
             if let Some(coords) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
-                println!("Mouse pressed at: {}, {}", coords.0, coords.1);
+                part_vec.particles.push(SandParticle{ xcoord: coords.0 as u32, ycoord: coords.1 as u32 })
             }
         }
+
+        physics_step(&mut part_vec);
+
+        // Drawing the new frame
+        buffer = new_frame(&mut part_vec);
 
         window.update_with_buffer(&buffer, WINDOW_WIDTH, WINDOW_HEIGHT).unwrap();
     }
 }
 
-// This function updates the buffered image with the new positions of particles
-fn update_buffer(mut buffer: &mut Vec<u32>) {
-    
+// Allows for particles to fall
+fn physics_step(part_vec: &mut Particles) {
+    for particle in part_vec.particles.iter_mut() {
+        particle.fall();
+    }
+}
+
+// This function returns the buffer for the new frame, given the new positions of particles
+fn new_frame(part_vec: &mut Particles) -> Vec<u32> {
+    let mut buffer: Vec<u32> = vec![0; WINDOW_WIDTH * WINDOW_HEIGHT];
+
+    for particle in part_vec.particles.iter() {
+        for i in 0..WINDOW_HEIGHT {
+            for j in 0..WINDOW_WIDTH {
+                let y_index = i * WINDOW_WIDTH;
+                let overall_index = y_index + j;
+
+                let x: usize = particle.xcoord as usize;
+                let y: usize = particle.ycoord as usize;
+
+                if i == y && j == x {
+                    buffer[overall_index] = 0xFFFFFF;
+                }
+            }
+        }
+    }
+
+    buffer
 }
