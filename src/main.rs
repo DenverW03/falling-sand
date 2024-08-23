@@ -66,24 +66,22 @@ fn physics_step(part_vec: &mut Particles) {
 }
 
 // This function returns the buffer for the new frame, given the new positions of particles
-fn new_frame(part_vec: &mut Particles) -> Vec<u32> {
+fn new_frame(part_vec: &Particles) -> Vec<u32> {
     let mut buffer: Vec<u32> = vec![0; WINDOW_WIDTH * WINDOW_HEIGHT];
 
-    for particle in part_vec.particles.iter() {
-        for i in 0..WINDOW_HEIGHT {
-            for j in 0..WINDOW_WIDTH {
-                let y_index = i * WINDOW_WIDTH;
-                let overall_index = y_index + j;
+    for particle in &part_vec.particles {
+        let x: usize = particle.xcoord as usize;
+        let y: usize = particle.ycoord as usize;
 
-                let x: usize = particle.xcoord as usize;
-                let y: usize = particle.ycoord as usize;
+        // Calculate the direct index in the buffer
+        let overall_index = y * WINDOW_WIDTH + x;
 
-                if i == y && j == x {
-                    buffer[overall_index] = 0xFFFFFF;
-                }
-            }
+        // Mark the particle's position in the buffer
+        if overall_index < buffer.len() {
+            buffer[overall_index] = 0xFFFFFF;
         }
     }
 
     buffer
 }
+
