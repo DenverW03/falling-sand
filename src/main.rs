@@ -17,8 +17,14 @@ struct Particles {
 
 impl SandParticle {
     // Function to handle the particle falling
-    fn fall(&mut self) {
-        if self.ycoord <= WINDOW_HEIGHT as u32 - 2 {
+    fn fall(&mut self, coords: &mut Vec<(u32, u32)>) {
+        // Preferable: true
+        let bounded: bool = self.ycoord <= WINDOW_HEIGHT as u32 - 2;
+
+        // Preferable: false
+        let below: bool = coords.contains(&(self.xcoord, self.ycoord + 1));
+
+        if bounded && !below {
             self.ycoord += 1;
         }
     }
@@ -60,8 +66,12 @@ fn main() {
 
 // Allows for particles to fall
 fn physics_step(part_vec: &mut Particles) {
+    // Getting a vector of tuples of the coordinates particles are at for obstacle detection
+    let mut coords: Vec<(u32, u32)> = Vec::new();
+    for particle in part_vec.particles.iter_mut() { coords.push((particle.xcoord, particle.ycoord)) };
+
     for particle in part_vec.particles.iter_mut() {
-        particle.fall();
+        particle.fall(&mut coords);
     }
 }
 
