@@ -1,6 +1,6 @@
-use std::{time::Duration, usize};
+use std::usize;
 use minifb::{WindowOptions, Window, Key};
-use std::thread::sleep;
+use rand::Rng;
 
 const WINDOW_WIDTH: usize = 800;
 const WINDOW_HEIGHT: usize = 600;
@@ -21,11 +21,35 @@ impl SandParticle {
         // Preferable: true
         let bounded: bool = self.ycoord <= WINDOW_HEIGHT as u32 - 2;
 
-        // Preferable: false
+        // Preferable: false (means the spot is empty)
         let below: bool = coords.contains(&(self.xcoord, self.ycoord + 1));
+        let bleft: bool = coords.contains(&(self.xcoord - 1, self.ycoord + 1));
+        let bright: bool = coords.contains(&(self.xcoord + 1, self.ycoord + 1));
+        let bboth: bool = bleft && bright;
 
         if bounded && !below {
             self.ycoord += 1;
+        }
+        else {
+            if !bboth && below {
+                let mut rng = rand::thread_rng();
+                let random = rng.gen_range(1..101);
+                if random > 50 {
+                    self.ycoord += 1;
+                    self.xcoord += 1;
+                    return;
+                }
+                self.ycoord += 1;
+                self.xcoord -= 1;
+            }
+            else if !bleft && below {
+                self.ycoord += 1;
+                self.xcoord -= 1;
+            }
+            else if !bright && below {
+                self.ycoord += 1;
+                self.xcoord += 1;
+            }
         }
     }
 }
@@ -51,7 +75,7 @@ fn main() {
         // Check if the mouse is down
         if window.get_mouse_down(minifb::MouseButton::Left) {
             if let Some(coords) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
-                part_vec.particles.push(SandParticle{ xcoord: coords.0 as u32, ycoord: coords.1 as u32 })
+                part_vec.particles.push(SandParticle{ xcoord: coords.0 as u32, ycoord: coords.1 as u32})
             }
         }
 
