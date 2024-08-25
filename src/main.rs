@@ -21,43 +21,50 @@ impl SandParticle {
     // Function to handle the particle falling
     fn fall(&mut self, grid: &mut Grid) {
         // Preferable: true
-        let bounded: bool = self.ycoord <= WINDOW_HEIGHT as u32 - 2;
+        let bounded: bool = self.ycoord <= WINDOW_HEIGHT as u32 - 2 && self.xcoord <= WINDOW_WIDTH as u32 - 2 && self.ycoord >= 2 && self.xcoord >= 2;
 
         if !bounded { return };
 
         // Preferable: false (means the spot is empty)
-        //let below: bool = coords.contains(&(self.xcoord, self.ycoord + 1));
         let below: bool = grid.cells[self.ycoord as usize + 1][self.xcoord as usize].is_occupied;
-        //let bleft: bool = coords.contains(&(self.xcoord - 1, self.ycoord + 1));
-        //let bright: bool = coords.contains(&(self.xcoord + 1, self.ycoord + 1));
-        //let bboth: bool = bleft && bright;
+        let bleft: bool = grid.cells[self.ycoord as usize + 1][self.xcoord as usize - 1].is_occupied;
+        let bright: bool = grid.cells[self.ycoord as usize + 1][self.xcoord as usize + 1].is_occupied;
+        let bboth: bool = bleft && bright;
 
         if !below {
             grid.leave_cell(self.xcoord as usize, self.ycoord as usize);
             self.ycoord += 1;
             grid.occupy_cell(self.xcoord as usize, self.ycoord as usize);
         }
-        //else {
-        //    if !bboth && below {
-        //        let mut rng = rand::thread_rng();
-        //        let random = rng.gen_range(1..101);
-        //        if random > 50 {
-        //            self.ycoord += 1;
-        //            self.xcoord += 1;
-        //            return;
-        //        }
-        //        self.ycoord += 1;
-        //        self.xcoord -= 1;
-        //    }
-        //    else if !bleft && below {
-        //        self.ycoord += 1;
-        //        self.xcoord -= 1;
-        //    }
-        //    else if !bright && below {
-        //        self.ycoord += 1;
-        //        self.xcoord += 1;
-        //    }
-        //}
+        else {
+            if !bboth {
+                let mut rng = rand::thread_rng();
+                let random = rng.gen_range(1..101);
+                if random > 50 {
+                    grid.leave_cell(self.xcoord as usize, self.ycoord as usize);
+                    self.ycoord += 1;
+                    self.xcoord += 1;
+                    grid.occupy_cell(self.xcoord as usize, self.ycoord as usize);
+                    return;
+                }
+                grid.leave_cell(self.xcoord as usize, self.ycoord as usize);
+                self.ycoord += 1;
+                self.xcoord -= 1;
+                grid.occupy_cell(self.xcoord as usize, self.ycoord as usize);
+            }
+            else if !bleft {
+                grid.leave_cell(self.xcoord as usize, self.ycoord as usize);
+                self.ycoord += 1;
+                self.xcoord -= 1;
+                grid.occupy_cell(self.xcoord as usize, self.ycoord as usize);
+            }
+            else if !bright {
+                grid.leave_cell(self.xcoord as usize, self.ycoord as usize);
+                self.ycoord += 1;
+                self.xcoord += 1;
+                grid.occupy_cell(self.xcoord as usize, self.ycoord as usize);
+            }
+        }
     }
 }
 
