@@ -23,6 +23,8 @@ impl SandParticle {
         // Preferable: true
         let bounded: bool = self.ycoord <= WINDOW_HEIGHT as u32 - 2;
 
+        if !bounded { return };
+
         // Preferable: false (means the spot is empty)
         //let below: bool = coords.contains(&(self.xcoord, self.ycoord + 1));
         let below: bool = grid.cells[self.ycoord as usize + 1][self.xcoord as usize].is_occupied;
@@ -30,8 +32,8 @@ impl SandParticle {
         //let bright: bool = coords.contains(&(self.xcoord + 1, self.ycoord + 1));
         //let bboth: bool = bleft && bright;
 
-        if bounded && !below {
-            grid.leave_cell(self.xcoord as usize, self.xcoord as usize);
+        if !below {
+            grid.leave_cell(self.xcoord as usize, self.ycoord as usize);
             self.ycoord += 1;
             grid.occupy_cell(self.xcoord as usize, self.ycoord as usize);
         }
