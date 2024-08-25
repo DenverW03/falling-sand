@@ -11,46 +11,72 @@ struct SandParticle {
     ycoord: u32,
 }
 
-struct Particles {
-    particles: Vec<SandParticle>,
-}
-
 impl SandParticle {
     // Function to handle the particle falling
-    fn fall(&mut self, coords: &mut Vec<(u32, u32)>) {
+    fn fall(&mut self, grid: &mut Grid) {
         // Preferable: true
         let bounded: bool = self.ycoord <= WINDOW_HEIGHT as u32 - 2;
 
         // Preferable: false (means the spot is empty)
-        let below: bool = coords.contains(&(self.xcoord, self.ycoord + 1));
-        let bleft: bool = coords.contains(&(self.xcoord - 1, self.ycoord + 1));
-        let bright: bool = coords.contains(&(self.xcoord + 1, self.ycoord + 1));
-        let bboth: bool = bleft && bright;
+        //let below: bool = coords.contains(&(self.xcoord, self.ycoord + 1));
+        //let bleft: bool = coords.contains(&(self.xcoord - 1, self.ycoord + 1));
+        //let bright: bool = coords.contains(&(self.xcoord + 1, self.ycoord + 1));
+        //let bboth: bool = bleft && bright;
 
-        if bounded && !below {
-            self.ycoord += 1;
-        }
-        else {
-            if !bboth && below {
-                let mut rng = rand::thread_rng();
-                let random = rng.gen_range(1..101);
-                if random > 50 {
-                    self.ycoord += 1;
-                    self.xcoord += 1;
-                    return;
-                }
-                self.ycoord += 1;
-                self.xcoord -= 1;
-            }
-            else if !bleft && below {
-                self.ycoord += 1;
-                self.xcoord -= 1;
-            }
-            else if !bright && below {
-                self.ycoord += 1;
-                self.xcoord += 1;
-            }
-        }
+        //if bounded && !below {
+        //    self.ycoord += 1;
+        //}
+        //else {
+        //    if !bboth && below {
+        //        let mut rng = rand::thread_rng();
+        //        let random = rng.gen_range(1..101);
+        //        if random > 50 {
+        //            self.ycoord += 1;
+        //            self.xcoord += 1;
+        //            return;
+        //        }
+        //        self.ycoord += 1;
+        //        self.xcoord -= 1;
+        //    }
+        //    else if !bleft && below {
+        //        self.ycoord += 1;
+        //        self.xcoord -= 1;
+        //    }
+        //    else if !bright && below {
+        //        self.ycoord += 1;
+        //        self.xcoord += 1;
+        //    }
+        //}
+    }
+}
+
+struct Particles {
+    particles: Vec<SandParticle>,
+}
+
+#[derive(Clone)]
+struct GridCell {
+    is_occupied: bool,
+}
+
+struct Grid {
+    cells: Vec<Vec<GridCell>>,
+    width: usize,
+    height: usize,
+}
+
+impl Grid {
+    fn new() -> Self {
+        let cells = vec![vec![GridCell { is_occupied: false }; WINDOW_WIDTH]; WINDOW_HEIGHT];
+        Grid { cells, width: WINDOW_WIDTH, height: WINDOW_HEIGHT }
+    }
+
+    fn occupy_cell(&mut self, x: usize, y: usize) {
+        self.cells[y][x].is_occupied = true;
+    }
+
+    fn leave_cell(&mut self, x: usize, y: usize) {
+        self.cells[y][x].is_occupied = false;
     }
 }
 
@@ -59,6 +85,8 @@ fn main() {
     let mut buffer: Vec<u32> = vec![0; WINDOW_WIDTH * WINDOW_HEIGHT];
 
     let mut part_vec = Particles{ particles: Vec::new() };
+
+    let mut grid: Grid = Grid::new();
 
     // Initialising the window
     let mut window = match Window::new("Falling Sand", WINDOW_WIDTH, WINDOW_HEIGHT, WindowOptions::default()) {
@@ -89,13 +117,9 @@ fn main() {
 }
 
 // Allows for particles to fall
-fn physics_step(part_vec: &mut Particles) {
-    // Getting a vector of tuples of the coordinates particles are at for obstacle detection
-    let mut coords: Vec<(u32, u32)> = Vec::new();
-    for particle in part_vec.particles.iter_mut() { coords.push((particle.xcoord, particle.ycoord)) };
-
+fn physics_step(part_vec: &mut Particles, grid: &mut Grid) {
     for particle in part_vec.particles.iter_mut() {
-        particle.fall(&mut coords);
+        particle.fall(grid);
     }
 }
 
@@ -118,4 +142,3 @@ fn new_frame(part_vec: &Particles) -> Vec<u32> {
 
     buffer
 }
-
