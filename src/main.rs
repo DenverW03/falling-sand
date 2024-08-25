@@ -12,6 +12,12 @@ struct SandParticle {
 }
 
 impl SandParticle {
+    // Instantiates struct and adds position to grid
+    fn new(grid: &mut Grid, xcoord: u32, ycoord: u32) -> Self {
+        grid.occupy_cell(xcoord as usize, ycoord as usize);
+        SandParticle { xcoord, ycoord }
+    }
+
     // Function to handle the particle falling
     fn fall(&mut self, grid: &mut Grid) {
         // Preferable: true
@@ -19,13 +25,16 @@ impl SandParticle {
 
         // Preferable: false (means the spot is empty)
         //let below: bool = coords.contains(&(self.xcoord, self.ycoord + 1));
+        let below: bool = grid.cells[self.ycoord as usize + 1][self.xcoord as usize].is_occupied;
         //let bleft: bool = coords.contains(&(self.xcoord - 1, self.ycoord + 1));
         //let bright: bool = coords.contains(&(self.xcoord + 1, self.ycoord + 1));
         //let bboth: bool = bleft && bright;
 
-        //if bounded && !below {
-        //    self.ycoord += 1;
-        //}
+        if bounded && !below {
+            grid.leave_cell(self.xcoord as usize, self.xcoord as usize);
+            self.ycoord += 1;
+            grid.occupy_cell(self.xcoord as usize, self.ycoord as usize);
+        }
         //else {
         //    if !bboth && below {
         //        let mut rng = rand::thread_rng();
@@ -61,14 +70,12 @@ struct GridCell {
 
 struct Grid {
     cells: Vec<Vec<GridCell>>,
-    width: usize,
-    height: usize,
 }
 
 impl Grid {
     fn new() -> Self {
         let cells = vec![vec![GridCell { is_occupied: false }; WINDOW_WIDTH]; WINDOW_HEIGHT];
-        Grid { cells, width: WINDOW_WIDTH, height: WINDOW_HEIGHT }
+        Grid { cells }
     }
 
     fn occupy_cell(&mut self, x: usize, y: usize) {
@@ -103,11 +110,11 @@ fn main() {
         // Check if the mouse is down
         if window.get_mouse_down(minifb::MouseButton::Left) {
             if let Some(coords) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
-                part_vec.particles.push(SandParticle{ xcoord: coords.0 as u32, ycoord: coords.1 as u32})
+                part_vec.particles.push(SandParticle::new(&mut grid, coords.0 as u32, coords.1 as u32));
             }
         }
 
-        physics_step(&mut part_vec);
+        physics_step(&mut part_vec, &mut grid);
 
         // Drawing the new frame
         buffer = new_frame(&mut part_vec);
