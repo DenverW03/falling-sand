@@ -4,7 +4,6 @@ use rand::Rng;
 
 const WINDOW_WIDTH: usize = 800;
 const WINDOW_HEIGHT: usize = 600;
-const SAND_SIZE: u32 = 4;
 
 struct SandParticle {
     xcoord: u32,
@@ -20,9 +19,8 @@ impl SandParticle {
 
     // Function to handle the particle falling
     fn fall(&mut self, grid: &mut Grid) {
-        // Preferable: true
+        // Bounding prevents array indexing violations
         let bounded: bool = self.ycoord <= WINDOW_HEIGHT as u32 - 2 && self.xcoord <= WINDOW_WIDTH as u32 - 2 && self.ycoord >= 2 && self.xcoord >= 2;
-
         if !bounded { return };
 
         // Preferable: false (means the spot is empty)
@@ -31,12 +29,14 @@ impl SandParticle {
         let bright: bool = grid.cells[self.ycoord as usize + 1][self.xcoord as usize + 1].is_occupied;
         let bboth: bool = bleft && bright;
 
+        // Checking below first
         if !below {
             grid.leave_cell(self.xcoord as usize, self.ycoord as usize);
             self.ycoord += 1;
             grid.occupy_cell(self.xcoord as usize, self.ycoord as usize);
         }
         else {
+            // Prioritise random selection
             if !bboth {
                 let mut rng = rand::thread_rng();
                 let random = rng.gen_range(1..101);
@@ -81,12 +81,14 @@ struct Grid {
     cells: Vec<Vec<GridCell>>,
 }
 
+// Grid methods, new cell occupant and leave cell
 impl Grid {
     fn new() -> Self {
         let cells = vec![vec![GridCell { is_occupied: false }; WINDOW_WIDTH]; WINDOW_HEIGHT];
         Grid { cells }
     }
 
+    // Occupany is used for the collision detection
     fn occupy_cell(&mut self, x: usize, y: usize) {
         self.cells[y][x].is_occupied = true;
     }
@@ -132,7 +134,7 @@ fn main() {
     }
 }
 
-// Allows for particles to fall
+// Calls fall impl for the particles to create motion
 fn physics_step(part_vec: &mut Particles, grid: &mut Grid) {
     for particle in part_vec.particles.iter_mut() {
         particle.fall(grid);
